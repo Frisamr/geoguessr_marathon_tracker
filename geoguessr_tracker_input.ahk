@@ -61,22 +61,18 @@ $*F2::
     if InGame() {
         SetKeyDelay(-1)
         Send("{F2 down}")
-        return
     }
     if NextGameButtonExists() {
         if CancelButtonExists() {
             Send("{Space}")
-            return
         }
         else {
             LogScore()
-            return
         }
     }
     else {
         SetKeyDelay(-1)
         Send("{F2 down}")
-        return
     }
 
     spam_check := 0
@@ -91,11 +87,11 @@ LogScore() {
     Sleep(10)
 
     Send("a {Enter}")
-    Sleep(5)
+    Sleep(30)
     Send("^v")
-    Sleep(20)
+    Sleep(25)
     Send("{Enter}")
-    Sleep(10)
+    Sleep(30)
 
     WinActivate(GEOGUESSR_WINDOW_TITLE)
     Sleep(10)
