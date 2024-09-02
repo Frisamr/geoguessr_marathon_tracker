@@ -1,0 +1,60 @@
+// ==UserScript==
+// @name        block next round button on geoguessr.com
+// @namespace   Violentmonkey Scripts
+// @match       https://www.geoguessr.com/*
+// @grant       none
+// @version     1.0
+// @author      -
+// @description 02/09/2024, 9:26:53 am
+// ==/UserScript==
+
+const trigger_key = "F19";
+const check_interval = 100;
+
+var btn_disabled = false;
+
+function disableButtonCheck() {
+  //const t0 = performance.now();
+
+  const next_button = document.querySelector("button[data-qa=close-round-result]");
+  if (next_button != null) {
+    if (btn_disabled === false) {
+      btn_disabled = true;
+      next_button.disabled = true;
+      document.addEventListener("keydown", handleKeydownEvent, false);
+
+      console.log("next button disabled")
+    }
+  }
+  else {
+    btn_disabled = false;
+    document.removeEventListener("keydown", handleKeydownEvent, false);
+  }
+
+  //const t1 = performance.now();
+  //console.log(`disableButtonCheck took ${t1 - t0} milliseconds.`);
+}
+
+function handleKeydownEvent(event) {
+  if (event.type == "keydown") {
+    //console.log("key press detected: ", event);
+
+    if (event.key === trigger_key) {
+      const next_button = document.querySelector("button[data-qa=close-round-result]");
+      if (next_button != null) {
+        //alert("clicking next button");
+        btn_disabled = false;
+        next_button.disabled = false;
+        next_button.click();
+        document.removeEventListener("keydown", handleKeydownEvent, false);
+
+        //console.log("trigger key detected");
+      }
+    }
+  }
+  else {
+    alert("this shouldn't be possible");
+  }
+}
+
+var myInterval = setInterval(disableButtonCheck, check_interval);
