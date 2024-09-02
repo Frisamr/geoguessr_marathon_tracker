@@ -52,6 +52,7 @@ spam_check := 0
 #HotIf WinActive(GEOGUESSR_WINDOW_TITLE)
 $*F2::
 {
+    global spam_check
     if (spam_check = 1) {
         return
     }
