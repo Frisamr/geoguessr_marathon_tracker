@@ -38,18 +38,25 @@ ROUND_SCORE_Y_COORD := 1080
 ;     MsgBox(WinGetTitle())
 ; }
 
+; $*F4::
+; {
+;     Send(USERSCRIPT_TRIGGER_KEY)
+; }
+
 
 ; [[ Actual Code Below ]]
 ; Don't touch unless you're prepared for things to break.
 
-$*F4::
-{
-    Send(USERSCRIPT_TRIGGER_KEY)
-}
+spam_check := 0
 
 #HotIf WinActive(GEOGUESSR_WINDOW_TITLE)
 $*F2::
 {
+    if (spam_check = 1) {
+        return
+    }
+    spam_check := 1
+
     if InGame() {
         SetKeyDelay(-1)
         Send("{F2 down}")
@@ -70,6 +77,8 @@ $*F2::
         Send("{F2 down}")
         return
     }
+
+    spam_check := 0
 }
 
 LogScore() {
@@ -83,7 +92,7 @@ LogScore() {
     Send("a {Enter}")
     Sleep(5)
     Send("^v")
-    Sleep(10)
+    Sleep(20)
     Send("{Enter}")
     Sleep(10)
 
