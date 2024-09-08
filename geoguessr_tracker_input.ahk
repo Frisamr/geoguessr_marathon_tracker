@@ -13,7 +13,7 @@ CoordMode "Mouse", "Client" ; Makes mouse movements relative to client
 ; [[ End-user Configuration ]]
 
 GEOGUESSR_WINDOW_TITLE := "GeoGuessr"    ; TODO: make sure this works
-TERMINAL_WINDOW_TITLE := "PowerShell"
+TRACKER_WINDOW_TITLE := "GeoMarathonTracker"
 
 USERSCRIPT_TRIGGER_KEY := "{F19}"
 
@@ -31,6 +31,9 @@ CANCEL_BUTTON_COLOUR := "0x484858"
 ROUND_SCORE_LEFT_X_COORD := 1110
 ROUND_SCORE_RIGHT_X_COORD := 1230
 ROUND_SCORE_Y_COORD := 1080
+
+INPUT_BOX_X_COORD := 15
+INPUT_BOX_Y_COORD := 210
 
 ; Useful for testing purposes
 ; $*F3::
@@ -83,10 +86,10 @@ LogScore() {
     Send("^c")
     Sleep(5)
 
-    WinActivate(TERMINAL_WINDOW_TITLE)
+    WinActivate(TRACKER_WINDOW_TITLE)
     Sleep(10)
 
-    Send("a {Enter}")
+    MouseClick("Left", INPUT_BOX_X_COORD, INPUT_BOX_Y_COORD)
     Sleep(30)
     Send("^v")
     Sleep(25)
