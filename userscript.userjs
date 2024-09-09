@@ -12,6 +12,7 @@ const trigger_key = "F19";
 const check_interval = 100;
 
 var btn_disabled = false;
+var score_text_fixed = false;
 
 function disableButtonCheck() {
   //const t0 = performance.now();
@@ -48,6 +49,8 @@ function handleKeydownEvent(event) {
         next_button.click();
         document.removeEventListener("keydown", handleKeydownEvent, false);
 
+        score_text_fixed = false;
+
         //console.log("trigger key detected");
       }
     }
@@ -57,4 +60,14 @@ function handleKeydownEvent(event) {
   }
 }
 
+function fixScoreText() {
+  const score_text = document.querySelector(".shadow-text_negativeTextShadow__Jju3k");
+  if (score_text_fixed === false && score_text !== null) {
+    //console.log("score text:");
+    //console.log(score_text);
+    score_text.style.userSelect = "text";
+  }
+}
+
 var myInterval = setInterval(disableButtonCheck, check_interval);
+var myInterval2 = setInterval(fixScoreText, check_interval);

@@ -18,7 +18,6 @@ use marathon_log::{AddEntryResult, MarathonLog};
 use utils::time_counter;
 use utils::{calculate_countdown, score_from_str, timekeeping::TWENTY_FOUR_HOURS_IN_SECS};
 
-// TODO: re-use allocation by not constructing new strings
 
 const APP_NAME: &str = "GeoMarathonTracker";
 
@@ -83,8 +82,8 @@ impl EguiTrackerApp {
             None => 0,
         };
         let (is_paused, pause_btn_txt) = match self.marathon_log.current_epoch {
-            Some(_) => (false, "Pause timer"),
-            None => (true, "Unpause timer"),
+            Some(_) => (false, "Pause"),
+            None => (true, "Unpause"),
         };
         let countdown = calculate_countdown(time_since_epoch, self.marathon_log.epoch_offset_secs);
         let time_since_5k = self
@@ -98,14 +97,13 @@ impl EguiTrackerApp {
 
         ui.horizontal_top(|ui| {
             ui.vertical(|ui| {
-                ui.heading("Time remaining:");
+                ui.heading("Time left:");
                 ui.label(countdown);
                 ui.label("");
-                ui.heading("Time since last 5k:");
+                ui.heading("Last 5k:");
                 ui.label(time_since_5k);
 
                 let _test = ui.label("");
-                //println!("RECT DEBUG: {}", test.rect);
                 ui.label("");
                 if ui.add(Button::new(pause_btn_txt)).clicked() {
                     if is_paused {
@@ -124,7 +122,7 @@ impl EguiTrackerApp {
                 ui.heading("5k count:");
                 ui.label(self.marathon_log.total_5ks.to_string());
                 ui.label("");
-                ui.heading("Estimated pace:");
+                ui.heading("Pace:");
                 ui.label(estimated_pace);
 
                 ui.label("");
@@ -145,11 +143,12 @@ impl EguiTrackerApp {
             });
         });
 
-        ui.label("");
         ui.separator();
-        ui.label("");
+        /* if ui.button("print entries").clicked() {
+            self.marathon_log.print_entries();
+        } */
         ui.heading("Paste score:");
-        let response = ui.add(TextEdit::multiline(&mut self.score_input_txt).desired_rows(1));
+        let response = ui.add(TextEdit::multiline(&mut self.score_input_txt).desired_rows(2));
         if response.changed() && (self.score_input_txt.chars().filter(|&c| c == '\n').count() >= 1)
         {
             let score_conv_res = score_from_str(&self.score_input_txt);
@@ -157,6 +156,7 @@ impl EguiTrackerApp {
                 self.score_input_txt.clear();
                 self.err_state.invalid_score = Some(err.to_string());
             } else {
+                // score_conv_res is known to not be an error
                 match self.marathon_log.try_add_entry(score_conv_res.unwrap()) {
                     AddEntryResult::Ok => {
                         self.score_input_txt.clear();
@@ -192,13 +192,22 @@ impl EguiTrackerApp {
         let mut font_defs = FontDefinitions::default();
         font_defs.font_data.insert(
             "Recursive Mono".to_owned(),
-            FontData::from_static(include_bytes!("fonts/RecMonoLinear-Regular-1.085.ttf")),
+            FontData::from_static(include_bytes!("fonts/RecursiveMonoLnrSt-Bold.ttf")),
         );
         font_defs
             .families
             .get_mut(&FontFamily::Monospace)
             .unwrap()
             .insert(0, "Recursive Mono".to_owned());
+        font_defs.font_data.insert(
+            "Recursive Sans".to_owned(),
+            FontData::from_static(include_bytes!("fonts/RecursiveSansLnrSt-Bold.ttf")),
+        );
+        font_defs
+            .families
+            .get_mut(&FontFamily::Proportional)
+            .unwrap()
+            .insert(0, "Recursive Sans".to_owned());
         cc.egui_ctx.set_fonts(font_defs);
 
         let style = (*cc.egui_ctx.style()).clone();
@@ -256,15 +265,15 @@ fn custom_egui_styles(mut style: Style) -> Style {
         top: window_margin,
         bottom: window_margin,
     };
-    spacing.item_spacing = Vec2 { x: 30.0, y: 2.0 };
+    spacing.item_spacing = Vec2 { x: 50.0, y: 2.0 };
     style.spacing = spacing;
 
     style.text_styles = [
-        (Heading, FontId::new(20.0, FontFamily::Proportional)),
-        (Body, FontId::new(20.0, FontFamily::Monospace)),
-        (Monospace, FontId::new(20.0, FontFamily::Monospace)),
+        (Heading, FontId::new(26.0, FontFamily::Proportional)),
+        (Body, FontId::new(26.0, FontFamily::Monospace)),
+        (Monospace, FontId::new(26.0, FontFamily::Monospace)),
         (Button, FontId::new(20.0, FontFamily::Proportional)),
-        (Small, FontId::new(14.0, FontFamily::Proportional)),
+        (Small, FontId::new(16.0, FontFamily::Proportional)),
     ]
     .into();
 

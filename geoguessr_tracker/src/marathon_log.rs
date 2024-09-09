@@ -93,6 +93,17 @@ impl MarathonLog {
         None
     }
 
+    #[allow(dead_code)]
+    pub(crate) fn print_entries(&self) {
+        assert_eq!(self.log_entries.scores.len(), self.log_entries.times.len());
+        for i in 0..self.log_entries.times.len() {
+            println!(
+                "entry: score {} and time {}",
+                self.log_entries.scores[i], self.log_entries.times[i]
+            );
+        }
+    }
+
     /* pub(crate) fn print_stats(&self) {
         let (success_count, miss_count, total_score) =
             self.log_entries.iter().fold((0, 0, 0), |acc, x| {
