@@ -1,8 +1,11 @@
+use std::io::Write;
 use std::time::Instant;
+use std::fs::{self, File};
 
-use log::info;
+use log::{info, error};
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct LogEntries {
     scores: Vec<u16>,
     times: Vec<u32>,
@@ -102,6 +105,30 @@ impl MarathonLog {
                 self.log_entries.scores[i], self.log_entries.times[i]
             );
         }
+    }
+
+    pub(crate) fn save_to_file(&self) -> std::io::Result<()> {
+        for i in 0..20 {
+            let num = i.to_string();
+            let path = "data".to_owned() + &num + ".ron";
+            match fs::exists(&path) {
+                Err(err) => {
+                    error!("error saving to file: {}", err.to_string());
+                },
+                Ok(true) => {
+                    continue;
+                },
+                Ok(false) => {
+                    let mut file = File::create_new(path)?;
+                    let serialized = ron::to_string(&self.log_entries).unwrap();
+                    file.write_all(serialized.as_bytes())?;
+
+                    return Ok(());
+                }
+            }
+        }
+
+        Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "all file names where taken"))
     }
 
     /* pub(crate) fn print_stats(&self) {

@@ -40,6 +40,7 @@ fn main() {
 struct EguiTrackerApp {
     is_started: bool,
     marathon_log: MarathonLog,
+    save_on_exit: bool,
     score_input_txt: String,
     err_state: AppErrState,
 }
@@ -56,13 +57,31 @@ impl eframe::App for EguiTrackerApp {
 
         ctx.request_repaint();
     }
+
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        if self.save_on_exit {
+            let res = self.marathon_log.save_to_file();
+            if res.is_err() {
+                error!("error saving to file: {}", res.unwrap_err().to_string());
+            }
+        }
+    }
 }
 
 impl EguiTrackerApp {
     fn show_start_display(&mut self, ui: &mut Ui) {
-        if ui.add(Button::new("Start timer")).clicked() {
+        if ui.button("Start timer").clicked() {
             self.is_started = true;
             self.marathon_log.current_epoch = Some(Instant::now());
+        }
+        let save_btn_txt = if self.save_on_exit {
+            "saving on exit is ON"
+        } else {
+            "saving on exit is OFF"
+        };
+        ui.label("\r\n\r\n\r\n\r\n\r\n\r\n");
+        if ui.button(save_btn_txt).clicked() {
+            self.save_on_exit = !self.save_on_exit;
         }
     }
 
@@ -216,6 +235,7 @@ impl EguiTrackerApp {
         Self {
             is_started: false,
             marathon_log: MarathonLog::new(TWENTY_FOUR_HOURS_IN_SECS),
+            save_on_exit: false,
             score_input_txt: String::new(),
             err_state: AppErrState {
                 timer_paused: false,
