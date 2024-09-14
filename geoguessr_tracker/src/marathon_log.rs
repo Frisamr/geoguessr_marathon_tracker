@@ -1,6 +1,7 @@
 use std::io::Write;
 use std::time::Instant;
 use std::fs::{self, File};
+use std::io;
 
 use log::{info, error};
 use serde::{Serialize, Deserialize};
@@ -107,6 +108,16 @@ impl MarathonLog {
         }
     }
 
+    pub(crate) fn add_up_5ks(&self) -> u16 {
+        assert_eq!(self.log_entries.scores.len(), self.log_entries.times.len());
+        self.log_entries.scores.iter()
+            .map(|score| {
+                if *score == 5000 { 1u16 } else { 0u16 }
+            })
+            .reduce(|acc, x| { acc + x })
+            .unwrap_or(0)
+    }
+
     pub(crate) fn save_to_file(&self) -> std::io::Result<()> {
         for i in 0..20 {
             let num = i.to_string();
@@ -128,7 +139,28 @@ impl MarathonLog {
             }
         }
 
-        Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "all file names where taken"))
+        Err(io::Error::new(io::ErrorKind::AlreadyExists, "all file names where taken"))
+    }
+
+    pub(crate) fn load_from_file(&mut self, path: &str) -> std::io::Result<()> {
+        if fs::exists(path)? {
+            let contents = fs::read_to_string(path)?;
+            let de_res = ron::from_str::<LogEntries>(&contents);
+            match de_res {
+                Err(err) => {
+                    error!("error reading file: {}", err.to_string());
+                    Err(io::Error::new(io::ErrorKind::InvalidData, "data could not be deserialized"))
+                },
+                Ok(log) => {
+                    self.log_entries = log;
+                    info!("successfully loaded from file!");
+                    Ok(())
+                }
+            }
+        }
+        else {
+            Err(io::Error::new(io::ErrorKind::NotFound, "file not found"))
+        }
     }
 
     /* pub(crate) fn print_stats(&self) {

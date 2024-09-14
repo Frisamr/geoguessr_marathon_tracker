@@ -1,5 +1,6 @@
 use std::default::Default;
 use std::time::Instant;
+use std::str::FromStr;
 
 use env_logger::{Builder, Env};
 #[allow(unused_imports)]
@@ -16,6 +17,7 @@ mod utils;
 
 use marathon_log::{AddEntryResult, MarathonLog};
 use utils::time_counter;
+use utils::timekeeping::HoursMinutesSeconds;
 use utils::{calculate_countdown, score_from_str, timekeeping::TWENTY_FOUR_HOURS_IN_SECS};
 
 
@@ -42,6 +44,11 @@ struct EguiTrackerApp {
     marathon_log: MarathonLog,
     save_on_exit: bool,
     score_input_txt: String,
+    file_name_txt: String,
+    hours_txt: String,
+    mins_txt: String,
+    secs_txt: String,
+    headstart_5k_txt: String,
     err_state: AppErrState,
 }
 
@@ -70,19 +77,55 @@ impl eframe::App for EguiTrackerApp {
 
 impl EguiTrackerApp {
     fn show_start_display(&mut self, ui: &mut Ui) {
+        use egui::TextEdit;
+
         if ui.button("Start timer").clicked() {
             self.is_started = true;
+            if let Ok(hms) = HoursMinutesSeconds::from_strs(&self.hours_txt, &self.mins_txt, &self.secs_txt) {
+                let total_secs = TWENTY_FOUR_HOURS_IN_SECS - hms.total_secs();
+                self.marathon_log.epoch_offset_secs = total_secs;
+            }
             self.marathon_log.current_epoch = Some(Instant::now());
+            if let Ok(count) = u16::from_str(&self.headstart_5k_txt) {
+                let added_up = self.marathon_log.add_up_5ks();
+                if added_up != count {
+                    if added_up > count {
+                        error!("data from file has more 5ks than provided number");
+                    }
+                    if added_up < count {
+                        let diff = count - added_up;
+                        for _ in 0..diff {
+                            self.marathon_log.try_add_entry(5000);
+                        }
+                    }
+                }
+                self.marathon_log.total_5ks = self.marathon_log.add_up_5ks();
+            }
         }
         let save_btn_txt = if self.save_on_exit {
             "saving on exit is ON"
         } else {
             "saving on exit is OFF"
         };
-        ui.label("\r\n\r\n\r\n\r\n\r\n\r\n");
+        ui.label("");
         if ui.button(save_btn_txt).clicked() {
             self.save_on_exit = !self.save_on_exit;
         }
+
+        ui.heading("File name:");
+        ui.add(TextEdit::singleline(&mut self.file_name_txt));
+        if ui.button("Load from file").clicked() {
+            let res = self.marathon_log.load_from_file(&self.file_name_txt);
+            if let Err(err) = res {
+                error!("error reading file: {}", err.to_string());
+            }
+        };
+        ui.heading("Headstart time:");
+        ui.add(TextEdit::singleline(&mut self.hours_txt));
+        ui.add(TextEdit::singleline(&mut self.mins_txt));
+        ui.add(TextEdit::singleline(&mut self.secs_txt));
+        ui.heading("Headstart 5ks:");
+        ui.add(TextEdit::singleline(&mut self.headstart_5k_txt));
     }
 
     fn show_tracker_display(&mut self, ui: &mut Ui) {
@@ -237,6 +280,11 @@ impl EguiTrackerApp {
             marathon_log: MarathonLog::new(TWENTY_FOUR_HOURS_IN_SECS),
             save_on_exit: false,
             score_input_txt: String::new(),
+            file_name_txt: String::new(),
+            hours_txt: String::new(),
+            mins_txt: String::new(),
+            secs_txt: String::new(),
+            headstart_5k_txt: String::new(),
             err_state: AppErrState {
                 timer_paused: false,
                 invalid_score: None,

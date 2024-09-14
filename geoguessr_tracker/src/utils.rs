@@ -50,6 +50,8 @@ pub(crate) fn score_from_str(input_str: &str) -> Result<u16, String> {
 }
 
 pub mod timekeeping {
+    use std::{num::ParseIntError, str::FromStr};
+
     pub const TWENTY_FOUR_HOURS_IN_SECS: u32 = 60 * 60 * 24;
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -70,6 +72,21 @@ pub mod timekeeping {
                 minutes,
                 seconds,
             }
+        }
+
+        pub fn from_strs(hours: &str, mins: &str, secs: &str) -> Result<Self, ParseIntError> {
+            let hours_int = u8::from_str(&hours)?;
+            let mins_int = u8::from_str(&mins)?;
+            let secs_int = u8::from_str(&secs)?;
+            Ok(HoursMinutesSeconds {
+                hours: hours_int,
+                minutes: mins_int,
+                seconds: secs_int,
+            })
+        }
+
+        pub fn total_secs(&self) -> u32 {
+            ((self.hours as u32) * 60 * 60) + ((self.minutes as u32) * 60) + (self.seconds as u32)
         }
     }
 }
